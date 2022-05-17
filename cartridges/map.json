@@ -1,0 +1,444 @@
+{
+    "graph": [
+        {"id": "starting", "name": "on the road", "north":{"node": "explore1", "distance": 1}},
+        {"id": "explore1", "name": "materials", "east":{"node": "vampires1", "distance": 1}, "west":{"node":"werewolves1", "distance":1}},
+        {"id": "vampires1", "name": "the first attack", "east":{"node": "boostattack", "distance": 1}, "north":{"node": "sirens", "distance": 1}, "west":{"node":"explore1", "distance":1}},
+        {"id": "werewolves1", "name": "the first attack", "west": {"node": "alpha", "distance": 1},"east": {"node": "explore1", "distance":1}, "south":{"node": "boosthp", "distance":1}},
+        {"id": "boostattack", "name": "Attack Amplification", "west":{"node": "vampires1", "distance": 1}},
+        {"id": "sirens", "name": "yet another attack", "south":{"node": "vampires1", "distance": 1},"west":{"node": "boostmag", "distance": 1}},
+        {"id": "alpha", "name": "alpha wolf", "north":{"node": "boostdef", "distance": 1},"east":{"node": "werwolves1", "distance": 1}},
+        {"id": "boosthp", "name": "HP Amplification", "north":{"node":"werewolves1", "distance": 1}},
+        {"id": "boostmag", "name": "Magical Amplification", "east":{"node":"sirens", "distance": 1}, "west": {"node":"rest", "distance":1}, "north":{"node":"dragon", "distance":1}},
+        {"id": "rest", "name": "place to rest", "east":{"node": "boostmag", "distance":1},"west":{"node":"boostdef", "distance":1},"north":{"node":"dragon", "distance":1}},
+        {"id": "boostdef","name": "Defense Amplification", "east":{"node": "rest", "distance":1}, "south":{"node":"alpha", "distance":1}},
+        {"id": "dragon", "name": "Dragon Fight"}
+    ],
+    "round": {
+        "win-condition":{
+            "source": "roundboss",
+            "condition":{
+                "type": "comparison",
+                "left": "hp",
+                "right": "0",
+                "symbol": "<="
+            }
+        },
+        "lose-condition":{
+            "source": "player",
+            "condition":{
+                "type": "comparison",
+                "left":"hp",
+                "right":"0",
+                "symbol":"<="
+            }
+        }
+    },
+    "vampires": {
+        "win-condition":{
+            "source": "vampire5",
+            "condition":{
+                "type": "comparison",
+                "left": "hp",
+                "right": "0",
+                "symbol": "<="
+            },
+            "triggers":{
+                "effect":{
+                    "addStatus":"has beaten"
+                }
+            }
+        },
+        "lose-condition":{
+            "source": "player",
+            "condition":{
+                "type": "comparison",
+                "left":"hp",
+                "right":"0",
+                "symbol":"<="
+            }
+        }
+    },
+    "rooms":{
+        "starting":{
+            "description":{
+                "default": "It was time to go out and save the world from strife far too powerful to withstand without your helping hands. You grabbed your belongings you deemed necessary, stretched out your arms, flexed your hands, and went out.<br><br>This was a time that was very make-it-up-as-you-go. Sure, it helped that you knew a few places nearby that reportedly were abundant with either portals or monsters...or both. But say you handled all of those. Would it be able to be finished then? Or, the more likely option, you'd have to go elsewhere. When could it be done? How would you be certain it was done?<br><br>You'd get there when you'd get there. One step at a time, right?<br><br>You see only one path ahead...straight to the North."
+            }
+        },
+        "explore1":{
+            "description":{
+                "default": "The world appeared inclined to supply its only hope of help, as you would so modestly call yourself. You had come across an area composed of various debris from what had been department stores. Now, it looked worse for wear than a ghost town...which admittedly, may be more true than you'd like. You would have to be at complete attention, for that was the only way to prepare for what may happen in the next moment. To your right were the remains of a grocery store, while to your left lay chunks of rocks and some rope.",
+                "conditionals":{
+                    "has explored": "The world appeared inclined to supply its only hope of help, as you would so modestly call yourself. You had come across an area composed of various debris from what had been department stores. Now, it looked worse for wear than a ghost town...which admittedly, may be more true than you'd like. You would have to be at complete attention, for that was the only way to prepare for what may happen in the next moment. There was so little around you, now.<br><br>The street leading west from here looked as if rampaging beasts had demolished the walls that stood in their way, whereas the street leading east held an air of ominosity and...threat to it."
+                },
+                "items": [
+                    {
+                        "id": "food",
+                        "name": "from grocery store",
+                        "triggers":[
+                            {
+                                "action": "pickup",
+                                "effect":{
+                                    "addStatus": "has food",
+                                    "target": "round"
+                                }
+                            },
+                            {
+                                "action": "drop",
+                                "effect": {
+                                    "removeStatus": "has food",
+                                    "target": "round"
+                                }
+                            },
+                            {
+                                "action": "eat",
+                                "effect": {
+                                    "removeStatus": "has food",
+                                    "addStatus": "restoreHealth",
+                                    "target": "round"
+                                }
+                            }
+                        ],
+                        "destination": "inventory"
+                    },
+                    {
+                        "id": "stones",
+                        "name": "from rubble",
+                        "triggers":[
+                            {
+                                "action": "pickup",
+                                "effect":{
+                                    "addStatus": "has explored",
+                                    "target": "round"
+                                }
+                            }
+                        ],
+                        "destination": "inventory",
+                        "damage": 2
+                    }
+                ]
+            }
+        },
+        "vampires1":{
+            "description":{
+                "default": "Before too long you were met with a sight only suitable for nightmares and horror movies. A crew of vampires was hunched over a pile of silhouettes with faces frozen in terror, eyes wide-open and jaws locked into a scream. They had to have been placed haphazardly, or perhaps thrown.<br><br>The vampires were better for better for wear, minus the blood stained faces and clothes (though there was the unnecessary-to-speak truth of the blood not being their own). They all appeared to catch wind of you simultaneously, their heads snapping up and turning to you. There was a hungry look in their eyes, as if a full course meal hadn't come close to satiating them. They looked starved. A few dared to direct menacing smiles your way.<br><br>As they started to waltz closer to you, it became clear that there was five of them. If you didn't know any better, you'd think they'd owned the place. Like everything and everyone that could ever be was all there for them.<br><br>As if...<br><br>You felt your energy rise, power flooding through your veins and threatening to spill uncontrollably past the surface. They were cocky, drunk on newfound souls that they left beaten and broken. It was time that they were challenged. Send them back from whence they came, and hopefully worse.<br><br>A figure with dark hair and red, beady eyes that glinted with malicious intent began its approach. Perhaps they were the leader of this crew? No matter. Red dripped from their lips and scattered down the front of their clothes, making them look a bit like a (deranged) toddler. Their tantrum would be coming to a close.",
+                "conditionals":{
+                    "has beaten": "Things may not feel complete, but they did feel righter. The air may have been easier to breathe, or you were simply less breathless. But as you looked around at the area, eyes falling upon the lives disregarded by the unwelcome guests, you felt some sense of peace. Like you had restored something for them."
+                },
+                "npcs":[
+                    {
+                        "id": "vampire1",
+                        "name": "the leading vampire",
+                        "details": "A figure with dark hair and red, beady eyes that glinted with malicious intent. Red dripped from their lips and scattered down the front of their clothes, looking a bit like a (deranged) toddler.",
+                        "stats":{
+                            "attack":29,
+                            "magical": 5,
+                            "defense":17,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "vampire2",
+                        "name": "a vampire",
+                        "details": "It appeared as if no one had introduced them to sunscreen yet, nasty-looking burns covering splotches of skin. Much like their predecessor, their eyes were also red, and they made no hesitation in baring their fangs.",
+                        "stats":{
+                            "attack":29,
+                            "magical": 5,
+                            "defense":17,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "vampire3",
+                        "name": "another vampire",
+                        "details": "Much unlike the first two, this one had eyes like a storm. And what you could only presume to be a bone in their hands crackled like lightning, an unamused gaze falling upon you. No- forget unamused- murderous was what you were really looking for.",
+                        "stats":{
+                            "attack":29,
+                            "magical": 5,
+                            "defense":17,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "vampire4",
+                        "name": "the one that's too much like an animal",
+                        "details": "You would've been more inclined to think that this one was a shifter; they looked and sounded completely animalistic. Their hair went in every direction, even standing up on its ends. Their nails were filed to more resemble claws, even their feet were bare to show off talon-like toenails.",
+                        "stats":{
+                            "attack":29,
+                            "magical": 5,
+                            "defense":17,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "vampire5",
+                        "name": "the last one standing",
+                        "details": "Watching brethren in blood fall one-by-one was not something this one seemed to be taking very well. He threw his head back and screamed, leaving your blood and bones rattling and shaking you to your core.",
+                        "stats":{
+                            "attack":29,
+                            "magical": 5,
+                            "defense":17,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    }
+                ]
+            }
+        },
+        "werewolves1":{
+            "description":{
+                "default": "As you started down the ruined street, you could practically feel countless pairs of eyes glaring sharpened daggers into your skin. Whoever, or whatever, was stalking you like prey was not bothering in being stealthy about it. You wouldn't dare say that you respect them for their brazen nature, but at least you were in for an interesting time. <br><br>The further you went, the less distinguishable the houses were from the pothole-ridden streets. Clear and unnecessary demolition, and for what? Your irritation was reaching its peak, and the growling behind you was just impeccable. <br><br> It started with a single voice and grew into a chorus. When you turned on your heel you were faced with five grand masses of fur, all in a line and prowling inches and inches closer. For a moment, it appeared that none would break formation. <br><br> But just for a moment. A sandy-colored wolf threw its head back into a howl before lurching towards you.",
+                "conditionals":{
+                    "has beaten": "Time was all that was necessary to rebuild all that had been lost, here. Time and care, which you hoped your efforts would open the opportunity of. Hopefully these nightmarish and outlandish creatures wouldn't be able to just return the way they first came. Hopefully there was a timer of sorts, and it was giving you hefty amounts of time. From here was the west, the east, and the south."
+                },
+                "npcs":[
+                    {
+                        "id": "werewolf1",
+                        "name": "the presumed beta",
+                        "details": "",
+                        "stats":{
+                            "attack":7,
+                            "magical": 10,
+                            "defense":20,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "werewolf2",
+                        "name": "a monstrous wolf",
+                        "details": "All you could see dashing towards you was a giant red flag that promised bloodshed. Literally- the wolf's fur was the perfect shade of blood, so much that you doubted it was natural. Was it possible for werewolves to dye their fur in Purgatory, or was it a recent development? ...Hopefully it was something like hair dye and not a result of them wrecking the town.",
+                        "stats":{
+                            "attack":7,
+                            "magical": 10,
+                            "defense":20,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "werewolf3",
+                        "name": "madness",
+                        "details": "If any of the wolves in this crew had rabies, it would be this one. It may not have been foaming at the mouth, but it lacked any sense of tame or control that the previous two had.",
+                        "stats":{
+                            "attack":7,
+                            "magical": 10,
+                            "defense":20,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }                
+                    },
+                    {
+                        "id": "werewolf4",
+                        "name": "chaos",
+                        "details": "While the previous may have lacked control, this one certainly basked in true chaos. It made its movements unpredictable, although deliberately so. It had to have some cognition of what it was doing, and you figured this one's job was to make their prey confused.",
+                        "stats":{
+                            "attack":7,
+                            "magical": 10,
+                            "defense":20,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }               
+                    },
+                    {
+                        "id": "werewolf5",
+                        "name": "always the quiet ones",
+                        "details": "Silence was the only true distinction of this one from the others. They had howled, an equivalent of whooping and hollering, whether it be while attacking or edging the others on. This one was completely quiet, even now. And in its silence, there was a challenge. Perhaps this was the last of them here, but there was no intent to go down without a fight. And if it could, it would be bringing you to Purgatory with it.",
+                        "stats":{
+                            "attack":7,
+                            "magical": 10,
+                            "defense":20,
+                            "HP": 50,
+                            "damage1": 8,
+                            "damage2":10
+                        }              
+                    }
+                ]
+            }
+        },
+        "boostattack":{
+            "description":{
+                "default": "boostattack"
+            }
+        },
+        "sirens":{
+            "description":{
+                "default": "Walking into this area resembled strolling onto a stage that was subject to a fog machine, impeccable placement that didn't go past some invisible boundaries set. As if there weren't enough red flags around this place enough as it was. But perhaps the most alarming thing? You didn't feel alarmed...at all.<br><br>There was an air of tranquility that flitted about you. It was what you breathed and all you could see and hear. You felt at peace. Like everything was going to be alright. Diving deeper was the best option, the only option, and you started to grow more comfortable. The tenseness in your shoulders involuntarily relaxed, your heartbeat slowed, and a wistful smile started to sprout from the corners of your lips. It didn't meet your eyes.<br><br>Because internally, you could feel the turmoil, the panic as to what this may mean. It was so unlike anything you had experienced before. You knew it must've meant trouble, but you felt trapped in your own body. Like you weren't the one controlling it, but just inhabiting it, using it as a way of getting around. You wanted to look around and keep aware of your surroundings, but even if you could snap out of the trance at this point, you doubted you would be able to see very much. Even the ground two feet ahead of you was the pearly white density of a cloud. <br><br>When you stepped on it, it wisped away, momentarily curling around the lengths of your feet before darting off to who knew where. More trouble, more strife, more...singing?<br><br>You didn't know when it had started, but you didn't want it to stop. It was the most soothing set of voices you had ever been exposed to. Even as it rang in your ears, it was like small, satisfying bell chimes. <br><br>Luckily, it was also all you needed to snap out of it. If this was anything like what the humans experienced, well...you were happy with your lineage. You would be far gone to the Call of the Sirens by now, and most likely met with the ugly ensnaring teeth they hid behind their alluring smiles. You could sense one on its way to you, now. Still singing, but it sounded its true nature, now. Threatening, frightening, no-escaping. For you, and little beknownst to them, for them.<br><br>The nearest was twirling in the fog, looking to be floating, but it must have been so dense enough she could swim in it. She embodied all that you found to be most beautiful, down to the smallest of details. It was unsettling to think about how they come about finding this knowledge...But as soon as she saw your eyes and how they were not glossy or trance-induced, her own look turned steely. The skin at the tips of her fingers turned to scales, and the major key she had been singing in turned minor. As though she had leapt off a diving board, she went up before hurdling downwards towards you.",
+                "conditionals":{
+                    "has beaten": "You could see clearly now, which was as troubling as it was relieving. Before, you couldn't see how heartwrenching quiet and lifeless looked. You couldn't see the deafening influence of the sirens. But at least now you could see. And that had to mean something, right? There were two places to go from here. The west and the south, where the former felt closer to...the heart of the problem."
+                },
+                "npcs":[
+                    {
+                        "id": "siren1",
+                        "name": "getting the party started",
+                        "details": "",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }                
+                    },
+                    {
+                        "id": "siren2",
+                        "name": "a different kind of beauty",
+                        "details": "Although they all could've very well looked the exact same, and it was what you had anticipated based on the first's, this siren had all the same features but none of equal stylings. She was a variant, a breakthrough of one being just as beautiful but in a starkly different way. All the way down to her snake-like eyes and the forked tongue that you were sure had to be venomous. Just based on your luck alone.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }                
+                    },
+                    {
+                        "id": "siren3",
+                        "name": "grayscale",
+                        "details": "You were curious as to how long this one had actually been left undetected by you, for her gray skin made her look more like a statue than something alive, even now as she waltzed towards you. Everything to her was composed of varying shades of gray, and the fog warping around you even shifted to match. Confident lips forced into a smile to show jagged, shark-like teeth.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }                
+                    },
+                    {
+                        "id": "siren4",
+                        "name": "more colorful than a rainbow",
+                        "details": "Colors, vibrant and dull, and most consisting of ones you had never seen before. Even the hair that sprung from her head was inconsistent with each strand, the color of her irises their own sea that you could get hypnotized should you stare for too long. You could see what resembled veins covering the lengths of her arms, but even those shifted ever few moments. You could never be sure what you were staring at, and perhaps that was the point.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }               
+                    },
+                    {
+                        "id": "siren5",
+                        "name": "i haven't the foggiest idea",
+                        "details": "Fog swirled around them, covering them like the clothing on their back. If you had to guess, this was the main source of the fog of the area, for evry bit around you started to twist and turn. It had the same affect of standing in the waves of an ocean, making you feel like you were moving when you were certain you were standing still. With each of their steps, more fog exuded from their fingertips, their barefeet a ghostly pale. You couldn't distinguish what was cloud and what was them. All that you could be certain of was their milky white eyes that held all and no emotion.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }              
+                    },
+                    {
+                        "id": "siren6",
+                        "name": "sharper than a knife",
+                        "details": "The surroundings grew to be more visible, and you were left in the company of two remaining sirens. The one closest had earrings that surpassed even the length of her hair, which spiked up towards the top. A lot of her features seemed pointed- her nose, her ears, the shoes she wore that seemed to match the throwing knife she twirled impatiently in her hand. There was no doubt in your mind that the shoes could hurt as much as the blatant weapon, though you doubted she needed either.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }              
+                    },
+                    {
+                        "id": "siren7",
+                        "name": "will hold you captive",
+                        "details": "The last one standing made no immediate moves, even as the last of their presumed crew fell flat and faded away at your feet. Their dark complexion combined with their silver, shimmering eyes offered a sight that could've brought any tired traveler to the brink. You imagined this was the one that had caused most ships from older times to wreck, the one that heroes in myths heard and screamed and shouted to reach. Even you, after fighting off six already, questioned if it was necessary to defeat a seventh. You could fall back into what you felt in the very beginning- secure, comfort, and all tensions departing from you.",
+                        "stats":{
+                            "attack":20,
+                            "magical": 20,
+                            "defense":5,
+                            "HP": 65,
+                            "damage1": 15,
+                            "damage2":18
+                        }              
+                    }
+                ]
+            }
+        },
+        "alpha":{
+            "description":{
+                "default": "This area was in more shambles than the one to its east, looking like a newly renovated ghost town. Not even the wind in the trees dared to make a sound. You could just as quickly believe you had been warped into one of the silent films you had heard older humans referencing. But this was...even more intense than that. You felt as if the sounds of your inner thoughts were being viciously torn from you, leaving your mind in an equivalent state to your surroundings.<br><br>It shook you from the outside going in. You had never had to endure an earthquake, but you imagined this is what it would feel like at its most extreme. You wondered if the ground beneath your feet would open up to swallow you whole. You wondered if there was such a creature to cause that, or if this was just some ground-breaking creature you had stumbled upon.<br><br>You weren't left to your imagination for too long, however. There was a menacing, low rumble that you feared could have negative influence on your heartbeat. You could even feel it in your stomach, and it was worse than any illness that you've had to face. It seemed to stem from everywhere, but...your attention was caught just to the left of you. You weren't sure why at first. But then the power emanating from that point spoke for itself. Finally, you could make out the glints of eyes. Just a single pair, but mighty heavens above and fiery hells below.<br><br>It was always so frustrating when people in shows and movies froze. So many problems could at least have the possibility of being solved if they just moved, but it turned out there was something that could make you completely forget about your own two feet. Medusa may as well be standing right in front of you, staring into your eyes and making you a part of her decor. Try as you might, your legs were numb, your heart was definitely racing, and you felt like a deer caught in headlights.<br><br>The further it emerged, the more urgent your thoughts grew, though that meant so little here and now. This werewolf was like none you had ever seen. Not only was it taller, but it seemed wiser. It was more in control, more tactical, less impulsive. You wished this was an area you had explored during the day, because in the night, left with no light except the flickering flames of your determination...the wolf was so difficult to see.<br><br>This must be an alpha. <br><br>If it wasn't- well then you definitely didn't want to meet one. The growling finally stopped only when it bounded towards you, somehow making traveling on four feet for part of the way and two feet for the other part seemless.",
+                "conditionals":{
+                    "has beaten": "Still in shambles, but there was something more...lively to it. You couldn't put your finger on the reason why, but your spirits were lifted moreso than the first time you came around. You felt more at ease and far less sick. If anything you felt better than you had during this whole escapade. From here, you can go to the north or to the east."
+                },
+                "npcs":[
+                    {
+                        "id": "alpha1",
+                        "name": "mini-boss",
+                        "details": "",
+                        "stats":{
+                            "attack":25,
+                            "magical": 20,
+                            "defense":40,
+                            "HP": 115,
+                            "damage1": 26,
+                            "damage2": 26
+                        }                
+                    }
+                ]
+            }
+        },
+        "boosthp":{
+            "description":{
+                "default": "boosthp"
+            }
+        },
+        "boostmag":{
+            "description":{
+                "default": "boostmag"
+            }
+        },
+        "rest":{
+            "description":{
+                "default": "rest"
+            }
+        },
+        "boostdef":{
+            "description":{
+                "default": "boostdef"
+            }
+        },
+        "dragon":{
+            "description":{
+                "default": "No turning back now...<br><br>Fire was turning everything to ash, the &#8220;sturdier&#8221; structures caving in and piling behind you. Smoke drifted towards the sky, lighting up with the louder crackles and pops you heard from everything being dismantled. Piece by piece. Quite honestly, you were sick of the state everything was in. How broken down and helpless it all seemed.<br><br>Not helpless anymore. You provmised it before, and you would promise it again. Thins may seem at such an extreme rate of disrepair, but things could be fixed. Lost lives may not be found, but properly laid to rest. Able to rest knowing that no one else would endure such pain. This was a one-time-only type of problem.<br><br>You were more prepared than ever before. You had taken down other creatures of mass destruction to find your way here, at last, and not even a fire breathing dragon could stop you now. And, as it would turn out, you were not too far off.<br><br>You heard (and felt) a flap of mighty wings overhead. For a moment, the sun disappeared. The wingspan alone had to be at least as wide as a skyscraper was tall, its body even longer. At least it would be hard to miss...right?<br><br>You took a defensive stance as it prepared to land, although as soon as it did the ground that was previously surrounding you turned to water. The fire heightened and burned hotter, changing colors for what would be a magnificent sight if not for all the death and destruction that led to it and stemmed from it. Unblinking eyes focused onto each of the ripples that were caused by you falling in. You may as well be a miniscule skipping stone to this thing, and you knew that had to be one of its plans, if you could even last being touched by the insane set of teeth it had.<br><br>What was up with Purgatory and its children creatures' teeth?",
+                "conditionals":{
+                    "has beaten": "Victory has been met officially in your home. Your very home. But there was more to do if you wanted to save the entire world."
+                },
+                "npcs":[
+                    {
+                        "id": "dragon",
+                        "name": "final boss",
+                        "details": "",
+                        "stats":{
+                            "attack":35,
+                            "magical": 30,
+                            "defense":60,
+                            "HP": 500,
+                            "damage1": 50,
+                            "damage2": 50
+                        }                
+                    }
+                ]
+            }
+        }
+    }
+}

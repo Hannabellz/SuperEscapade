@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+        <title>Supernatural Defenders</title>
+        <link rel="stylesheet" href="/finalProject.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function gotdata(data) {
+    console.log("getting data")
+    $("#newtext").html(data.prompt);
+    }
+function gotview(data){
+    $("#view").html("")
+    $("#view").append(data);
+}
+function doParse(){
+    let toParse = $("#userInput").val();
+    console.log(toParse)
+    let normalize = toParse.replace(/[ ]/g, '-');
+    console.log(normalize)
+    $.ajax({url: `/parser/${normalize}/<%= gameID %>/<%= thisUser %>/<%= thisEmail %>`});
+    update();
+}
+function update() {
+    console.log("updating")
+    $.ajax({url: `/game/<%= gameID %>`}).done(gotdata);
+    }
+function doViewParse(){
+    let toParse = $("#viewInput").val();
+    console.log("tooooParse", toParse)
+    $.ajax({url: `/viewInfo/${toParse}/<%= thisUser %>/<%= thisEmail %>`}).done(gotview);
+}
+function checkforenter(e){
+    if (e.keyCode == 13)
+        doParse();
+}
+function checkforviewenter(e){
+    if (e.keyCode == 13)
+        doViewParse();
+}
+$(document).ready(function () {
+    $("#userInput").on("keypress", checkforenter);
+    $("#input").on("click", doParse);
+    //$("#viewInput").on("keypress", checkforviewenter);
+    $("#viewing").on("click", doViewParse)
+   setInterval(update, 200);
+    });
+</script>
+    </head>
+    <body>
+        <div id = "newtext"> <%= prompt %> </div>
+<div class="playerInput">
+        <input type = "text" name = "userInput" id = "userInput">
+        <button id = "input">Input</button>
+</div>
+
+<div id = 'view'> </div>
+<input type = "text" name = "viewInput" id = "viewInput" placeholder = "stats">
+<button id = "viewing">Change View</button>
+<div class = "instructions" id = "instructions" name = "instructions">
+    <h2>Acceptable Commands:</h2>
+    <p>move ____ where you fill in the blank with north, south, east, or west</p>
+    <p>pickup ____ where you fill in the blank with items in an area you could potentially pick up</p>
+    <p>attack ____ with ____ where the first blank is the name of the monster you want to attack, and the second blank is what you want to use. This may be an item you have in your inventory, or the number of the attack to use (1, 2, or 3).</p>
+    <p>use ____ on ____ where the first blank is the name of the item you're using, and the second blank is who you're using it on. This may be the name of a monster or self (for yourself).</p>
+    <br>
+    <h2>Acceptable Views:</h2>
+    <p>inventory</p>
+    <p>moves</p>
+    <p>stats</p>
+</div>
+    </body>
+</html>
