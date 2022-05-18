@@ -33,7 +33,7 @@ async function joiningGame(req,res){
         if(!result){
             console.log("pass: ", req.body.pass, req.body.email)
             let pass = await bcrypt.hash(req.body.pass,10)
-            users.insertOne({email: req.body.email, password: pass, username: "", inventory:[], class: "2", bonusHP: 0, bonusDef: 0, bonusMag: 0, bonusPhy:0, damageTaken: 0, specialUsed: 0}) //maybe have the bonus in gameStates instead?
+            users.insertOne({email: req.body.email, password: pass, username: "", inventory:[], class: "2", damageTaken: 0, specialUsed: 0})
         }
         else{
             console.log("result: ", result);
@@ -163,7 +163,7 @@ async function renderGameState(req,res){
             let description = defaultSetting["description"]["default"]
             let players = {}
             players[req.body.user]=req.body.email
-            gameStates.insertOne({gameID: gameIDy, prompt: description, index:0, players:players, playersVoted: [],voteToMove: 0, directions: [], check1: false,changedScene1: false,check2:false,changedScene2: false,check3:false,changedScene3: false,check4:false,changedScene4: false, check5:false,changedScene5: false,check6:false,changedScene6: false, vampiresDefeated: 0, vampireHealth: 50, werewolvesDefeated: 0, werewolfHealth: 50, alphaDefeated:0, alphaHealth: 100,sirensDefeated:0, sirenHealth: 70, dragonDefeated:0, dragonHealth: 300}) 
+            gameStates.insertOne({gameID: gameIDy, prompt: description, index:0, players:players,faintedPlayers:{}, playersVoted: [],voteToMove: 0, directions: [], bonusHP: 0, bonusDef: 0, bonusMag: 0, bonusPhy:0, check1: false,changedScene1: false,check2:false,changedScene2: false,check3:false,changedScene3: false,check4:false,changedScene4: false, check5:false,changedScene5: false,check6:false,changedScene6: false, vampiresDefeated: 0, vampireHealth: 50, werewolvesDefeated: 0, werewolfHealth: 50, alphaDefeated:0, alphaHealth: 100,sirensDefeated:0, sirenHealth: 70, dragonDefeated:0, dragonHealth: 300, lastSafe: 1}) 
             res.render("escapade", {gameID: gameIDy, prompt:description, thisUser: req.body.user, thisEmail: req.body.email})
         }
         if(result){
@@ -348,11 +348,16 @@ async function parsingComm(req,res){
         inventory = result.inventory
         gameStates.findOne({gameID: gameIDy}, async function(err, gSresult){
             console.log("length", Object.keys(gSresult.players).length)
-            let parsing = new CommandParser(thisEmail, gSresult.playersVoted, parsed, scenes, gSresult.check1,gSresult.changedScene2,gSresult.changedScene3,gSresult.changedScene4,gSresult.changedScene5,gSresult.changedScene6, gSresult.index, gSresult.voteToMove, gSresult.directions,Object.keys(gSresult.players).length, stats, moves,result.specialUsed, inventory, gSresult.vampiresDefeated, gSresult.vampireHealth, gSresult.werewolvesDefeated, gSresult.werewolfHealth, gSresult.alphaDefeated, gSresult.alphaHealth, gSresult.sirensDefeated, gSresult.sirenHealth,gSresult.dragonDefeated,gSresult.dragonHealth)
+            let parsing = new CommandParser(gSresult.lastSafe,gSresult.bonusDef,gSresult.bonusHP,gSresult.bonusPhy,gSresult.bonusMag,thisEmail, gSresult.playersVoted, parsed, scenes, gSresult.check1,gSresult.changedScene2,gSresult.changedScene3,gSresult.changedScene4,gSresult.changedScene5,gSresult.changedScene6, gSresult.index, gSresult.voteToMove, gSresult.directions,Object.keys(gSresult.players).length, stats, moves,result.specialUsed, inventory, gSresult.vampiresDefeated, gSresult.vampireHealth, gSresult.werewolvesDefeated, gSresult.werewolfHealth, gSresult.alphaDefeated, gSresult.alphaHealth, gSresult.sirensDefeated, gSresult.sirenHealth,gSresult.dragonDefeated,gSresult.dragonHealth)
             let commandObj = parsing.parse()
             console.log("gsssss:", gSresult.changedScene2)
             console.log("commandObj: ", commandObj)
             if(commandObj){
+                let boostedDef = gSresult.bonusDef
+                let boostedHP = gSresult.bonusHP
+                let boostedPhy = gSresult.bonusPhy
+                let boostedMag = gSresult.bonusMag
+                let lastSafe = gSresult.lastSafe
                 let sceneNum = gSresult.index
                 let voteToNum = gSresult.voteToMove
                 let direction = gSresult.directions
@@ -395,6 +400,11 @@ async function parsingComm(req,res){
                     changedScene3 = commandObj[6]
                     changedScene4 = commandObj[7]
                     changedScene5 = commandObj[8]
+                    boostedDef = commandObj[9]
+                    boostedHP = commandObj[10]
+                    boostedPhy = commandObj[11]
+                    boostedMag = commandObj[12]
+                    lastSafe = commandObj[13]
                 }
                 if(actNum==2){
                     sceneNum =commandObj[0]
@@ -413,10 +423,23 @@ async function parsingComm(req,res){
                 }
                 if(actNum==3){
                     
+                    let faintedPlayers = gSresult.faintedPlayers
                     let playerDef = stats["Defense"]
                     //users are attacking/using items on enemies
                     //will either send [item attacked with, the damage, 3, booleans for special moves, and message if they do not have ITEM being attacked with]
                     //or [item they used, the damage, 3, boolean for being tied, or message if they did not have the ITEM being used]
+                    if(Object.keys(faintedPlayers).length==Object.keys(gSresult.players).length){
+                        let defaultSetting = firstRound.rooms[scenes[gSresult.lastSafe]]
+                        let description = defaultSetting["description"]["conditionals"]["has fainted"]
+                        for(let email of Object.values(gSresult.players)){
+                            let userQuery = {$set: {damageTaken: 0}}
+                            users.findOneAndUpdate({email: email},userQuery)
+                        }
+                        await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: description,faintedPlayers: {}, index: gSresult.lastSafe, changedScene1:(!gSresult.lastSafe==1&&changedScene1), changedScene2: (!gSresult.lastSafe==2&&changedScene2), changedScene3:(!gSresult.lastSafe==3&&changedScene3), changedScene4: (!gSresult.lastSafe==4&&changedScene4), changedScene5: (!gSresult.lastSafe==5&&changedScene5), changedScene6: (!gSresult.lastSafe==6&&changedScene6)}});
+                        return;
+                    }
+                    if(!Object.values(faintedPlayers).includes(thisEmail)){
+
                     if(commandObj.length==5){
                         //item is being used
                         if(commandObj[4]==""){
@@ -448,7 +471,14 @@ async function parsingComm(req,res){
                                 monsterAttack = callTo[1]
                                 let damageTaken = callTo[2]
                                 await users.updateOne({email: thisEmail}, {$set:{inventory:inventory}})
-                                await users.updateOne({email: gSresult.players[userToAttack]}, {$set:{damageTaken:damageTaken}})
+                                if(damageTaken>0)
+                                    await users.updateOne({email: gSresult.players[userToAttack]}, {$inc:{damageTaken:damageTaken}})
+                                else{
+                                    for(let email of Object.values(gSresult.players)){
+                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        users.findOneAndUpdate({email: email},userQuery)
+                                    }
+                                }
                                 if(oneDef){
                                     if(sceneNum==2){
                                         vampiresDef+=1
@@ -518,7 +548,7 @@ async function parsingComm(req,res){
                                 let totalTurnDef = stats["Defense"]
                                 users.findOne({email: thisEmail}, function(err, resultEd){
                                     console.log("class: ", resultEd.class, "inventory: ", resultEd.inventory)
-                                    let bodef = resultEd.bonusDef
+                                    let bodef = boostedDef
                                     totalTurnDef = totalTurnDef*1.2 + bodef
                                 })
                                 let callTo = monster(sceneNum, thisUser, totalTurnDef, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
@@ -526,7 +556,14 @@ async function parsingComm(req,res){
                                 monsterAttack = callTo[1]
                                 let damageTaken = callTo[2]
                                 console.log("check2 = ", check2, damageTaken)
-                                await users.updateOne({email: thisEmail}, {$set:{damageTaken:damageTaken}})
+                                if(damageTaken>0)
+                                    await users.updateOne({email: thisEmail}, {$inc:{damageTaken:damageTaken}})
+                                else{
+                                    for(let email of Object.values(gSresult.players)){
+                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        users.findOneAndUpdate({email: email},userQuery)
+                                    }
+                                }
                                 if(oneDef){
                                     if(sceneNum==2){
                                         vampiresDef+=1
@@ -565,7 +602,14 @@ async function parsingComm(req,res){
                                     damageTaken-= (damageTaken*.2)
                                 }
                                 await users.updateOne({email: thisEmail}, {$set:{inventory:inventory}})
-                                await users.updateOne({email: gSresult.players[userToAttack]}, {$set:{damageTaken:damageTaken}})
+                                if(damageTaken>0)
+                                    await users.updateOne({email: gSresult.players[userToAttack]}, {$inc:{damageTaken:damageTaken}})
+                                else{
+                                    for(let email of Object.values(gSresult.players)){
+                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        users.findOneAndUpdate({email: email},userQuery)
+                                    }
+                                }
                                 if(oneDef){
                                     if(sceneNum==2){
                                         vampiresDef+=1
@@ -601,10 +645,20 @@ async function parsingComm(req,res){
                         console.log("special: ", special)
                         await users.updateOne({email: thisEmail}, {$set:{inventory:inventory, specialUsed:special}})
                     }
+                
                     let userLine = `${thisUser} used ${commandObj[0]}!<br><br>`
                     console.log("about to update", check2)
-                    await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: userLine.concat(monsterAttack),check2:check2,check3:check3,check4:check4,check5:check5,check6:check6, vampiresDefeated: vampiresDef, vampireHealth: thisVampHealth, werewolvesDefeated: werewolvesDef, werewolfHealth: thisWolfHealth, alphaDefeated:alphaDef, alphaHealth: thisAlphaHealth,sirensDefeated:sirensDef, sirenHealth: thisSirenHealth, dragonDefeated:dragonDef, dragonHealth: thisDragonHealth}})
+                    if(!Object.values(faintedPlayers).includes(thisEmail)){
+                        if(result.damageTaken>=stats["HP"]+gSresult.bonusHP){
+                            faintedPlayers[thisUser] = [thisEmail]
+                        }
+                    }
+                    await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: userLine.concat(monsterAttack),faintedPlayers:faintedPlayers,check2:check2,check3:check3,check4:check4,check5:check5,check6:check6, vampiresDefeated: vampiresDef, vampireHealth: thisVampHealth, werewolvesDefeated: werewolvesDef, werewolfHealth: thisWolfHealth, alphaDefeated:alphaDef, alphaHealth: thisAlphaHealth,sirensDefeated:sirensDef, sirenHealth: thisSirenHealth, dragonDefeated:dragonDef, dragonHealth: thisDragonHealth}})
                     return;
+                }
+                else{
+                    await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt: `${thisUser} has been knocked out for this battle.`}})
+                }
                 }
                 console.log("sceneNum, voteToNum", sceneNum, voteToNum)
                 let defaultSetting = firstRound.rooms[scenes[sceneNum]]
@@ -620,6 +674,9 @@ async function parsingComm(req,res){
                     description = defaultSetting["description"]["conditionals"]["has explored"]
                     if(actNum==2&&(!inventoryCheck)){
                         description = thisUser + ` picked up ${object}!<br><br>`+description
+                    }
+                    else if(playersThatVoted.length<Object.values(gSresult.players).length){
+                        description = gSresult.prompt
                     }
                 }
                 else if(check2&&sceneNum==2&&changedScene2){
@@ -637,12 +694,33 @@ async function parsingComm(req,res){
                 else if(check6&&sceneNum==11&&changedScene6){
                     description = defaultSetting["description"]["conditionals"]["has beaten"]
                 }
+                else if(sceneNum==4&&boostedPhy>0){
+                    description = defaultSetting["description"]["conditionals"]["has explored"]
+                }
+                else if(sceneNum==7&&boostedHP>0){
+                    description = defaultSetting["description"]["conditionals"]["has explored"]
+                }
+                else if(sceneNum==7||sceneNum==9){
+                    let userQuery = {$mul: {damageTaken: 1/3}} //1/3 of original damage
+                    for(let email of Object.values(gSresult.players)){
+                        users.findOneAndUpdate({email: email},userQuery)
+                    }
+                }
+                else if(sceneNum==8&&boostedMag>0){
+                    description = defaultSetting["description"]["conditionals"]["has explored"]
+                }
+                else if(sceneNum==4&&boosted10>0){
+                    description = defaultSetting["description"]["conditionals"]["has explored"]
+                }
                 console.log("description: ", description)
                 console.log("cssss: ", changedScene2)
-                if(actNum!=3)
-                    await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt:description, voteToMove: voteToNum,playersVoted: playersThatVoted, index: sceneNum, directions: direction, check1: check1,changedScene2:changedScene2,changedScene3:changedScene3,changedScene4:changedScene4,changedScene5:changedScene5,changedScene6:changedScene6}})
+                if(actNum!=3){
+                    await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt:description, voteToMove: voteToNum,playersVoted: playersThatVoted, index: sceneNum, directions: direction, check1: check1,changedScene2:changedScene2,changedScene3:changedScene3,changedScene4:changedScene4,changedScene5:changedScene5,changedScene6:changedScene6,bonusDef: boostedDef, bonusHP: boostedHP, bonusPhy: boostedPhy, bonusMag: boostedMag}})
+                    if(actNum==1){
+                        await gameStates.updateOne({gameID: gameIDy}, {$set:{faintedPlayers:{}, lastSafe:lastSafe}})
+                    }
+                }
             }
-            
         })
     
     })
@@ -652,9 +730,11 @@ async function parsingComm(req,res){
 async function parsingView(req, res){
     let db = await getDb()
     let users = db.collection("users")
+    let gameStates = db.collection("gameStates")
     let parsing = req.params[0].split('/')[0]
     let thisUser = req.params[0].split('/')[1]
     let thisEmail = req.params[0].split('/')[2]
+    let thisGame = new ObjectId(req.params[0].split('/')[3])
     console.log("parsingView", req.params[0], thisUser)
     let stats = {}
     let moves = {}
@@ -664,25 +744,27 @@ async function parsingView(req, res){
         stats = playerStats[result.class]
         moves = playerMoves[result.class]
         inventory = result.inventory
-        
-    if(parsing == "inventory"){
-        console.log("inventory: ", inventory, inventory.length)
-        let toSend = ``
-        for (let item = 0; item<inventory.length; item++){
-            toSend = toSend.concat(`<p>${inventory[item]}</p>`)
-            console.log("toSend in loop", toSend)
-        }
-        console.log("toSend", toSend)
-        res.send(toSend)
-    }
-    else if(parsing == "moves"||parsing == "attacks"){
-        console.log("moves", moves)
-        res.send(`<p>Attack 1: ${moves["Attack 1"]}</p><p>Attack 2: ${moves["Attack 2"]}</p><p>Attack 3: ${moves["Attack 3"]}</p>`)
-    }
-    else{
-        console.log("stats", stats)
-        res.send(`<p>Physical Attack: ${stats["Physical Attack"]}</p><p>Magical Attack: ${stats["Magical Attack"]}</p><p>Defense: ${stats["Defense"]}</p><p>HP: ${stats["HP"]}</p>`)
-    }
+        gameStates.findOne({gameID: thisGame}, function(err, resultG){
+            if(parsing == "inventory"){
+                console.log("inventory: ", inventory, inventory.length)
+                let toSend = ``
+                for (let item = 0; item<inventory.length; item++){
+                    toSend = toSend.concat(`<p>${inventory[item]}</p>`)
+                    console.log("toSend in loop", toSend)
+                }
+                console.log("toSend", toSend)
+                res.send(toSend)
+            }
+            else if(parsing == "moves"||parsing == "attacks"){
+                console.log("moves", moves)
+                res.send(`<p>Attack 1: ${moves["Attack 1"]}</p><p>Attack 2: ${moves["Attack 2"]}</p><p>Attack 3: ${moves["Attack 3"]}</p>`)
+            }
+            else{
+                console.log("stats", stats, resultG)
+                res.send(`<p>Physical Attack: ${stats["Physical Attack"]+resultG.bonusPhy}</p><p>Magical Attack: ${stats["Magical Attack"]+resultG.bonusMag}</p><p>Defense: ${stats["Defense"]+resultG.bonusDef}</p><p>HP: ${stats["HP"]+resultG.bonusHP-result.damageTaken}</p>`) 
+            }
+        })
+    
     })
 }
 

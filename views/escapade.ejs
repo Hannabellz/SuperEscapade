@@ -29,7 +29,7 @@ function update() {
 function doViewParse(){
     let toParse = $("#viewInput").val();
     console.log("tooooParse", toParse)
-    $.ajax({url: `/viewInfo/${toParse}/<%= thisUser %>/<%= thisEmail %>`}).done(gotview);
+    $.ajax({url: `/viewInfo/${toParse}/<%= thisUser %>/<%= thisEmail %>/<%= gameID %>`}).done(gotview);
 }
 function checkforenter(e){
     if (e.keyCode == 13)
@@ -42,7 +42,7 @@ function checkforviewenter(e){
 $(document).ready(function () {
     $("#userInput").on("keypress", checkforenter);
     $("#input").on("click", doParse);
-    //$("#viewInput").on("keypress", checkforviewenter);
+    $("#viewInput").on("keypress", checkforviewenter);
     $("#viewing").on("click", doViewParse)
    setInterval(update, 200);
     });

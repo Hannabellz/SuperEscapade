@@ -2,7 +2,12 @@ const firstRound = require("./cartridges/map.json")
 const AttackParser = require("./AttackParser")
 //----Command Parser, getting the first part of the input command since that will contain the player's intended action----
 module.exports = class CommandParser{
-    constructor (thisPlayer, playersThatVoted,command, scenes, check1,cS2, cS3, cS4,cS5,cS6, scene, voteToMove, directions, numOfPlayers, stats, moves, specialUsed, inventory, vamps, vampH, wolves, wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH){
+    constructor (lastSafe, bonusDef,bonusHP, bonusPhy,bonusMag,thisPlayer, playersThatVoted,command, scenes, check1,cS2, cS3, cS4,cS5,cS6, scene, voteToMove, directions, numOfPlayers, stats, moves, specialUsed, inventory, vamps, vampH, wolves, wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH){
+        this.lastSafe = lastSafe
+        this.bonusDef = bonusDef
+        this.bonusHP =bonusHP
+        this.bonusPhy = bonusPhy
+        this.bonusMag = bonusMag
         this.Player = thisPlayer
         this.pTV = playersThatVoted
         this.command = command
@@ -50,7 +55,7 @@ module.exports = class CommandParser{
                 console.log(this.scene, this.voteToMove+1, this.numOfPlayers, "less than")
                 this.directions.push(direction)
                 this.pTV.push(this.Player)
-                return [this.scene, this.voteToMove+1, 1, this.directions, this.pTV, this.cS2, this.cS3, this.cS4, this.cS5]
+                return [this.scene, this.voteToMove+1, 1, this.directions, this.pTV, this.cS2, this.cS3, this.cS4, this.cS5,this.bonusDef,this.bonusHP,this.bonusPhy,this.bonusMag, this.lastSafe]
             }
             if(!this.pTV.includes(this.Player)&&this.voteToMove+1==this.numOfPlayers){
                 console.log(this.scene+1, 0, "equal to")
@@ -68,6 +73,7 @@ module.exports = class CommandParser{
                         this.numToReturn = this.scene+2
                     else
                         this.numToReturn = this.scene+1
+                    this.lastSafe = 1
                 }
                 else if(this.scene==2){
                     if(direction=="east"&&directionE==majorityVote){
@@ -80,6 +86,7 @@ module.exports = class CommandParser{
                         this.numToReturn = this.scene-1
                     }
                     this.cS2 = true
+                    this.lastSafe = 2
                     console.log("cS2", this.cS2)
                 }
                 else if(this.scene==3){
@@ -93,9 +100,12 @@ module.exports = class CommandParser{
                         this.numToReturn = this.scene+4
                     }
                     this.cS3 = true
+                    this.lastSafe = 3
                 }
                 else if(this.scene==4){
                     this.numToReturn = this.scene-2
+                    this.bonusPhy = 6
+                    this.lastSafe = 4
                 }
                 else if(this.scene==5){
                     if(direction=="south"&&directionS==majorityVote){
@@ -105,6 +115,7 @@ module.exports = class CommandParser{
                         this.numToReturn = this.scene+3
                     }
                     this.cS4 = true
+                    this.lastSafe = 5
                 }
                 else if(this.scene==6){
                     if(direction=="north"&&directionN==majorityVote){
@@ -114,9 +125,12 @@ module.exports = class CommandParser{
                         this.numToReturn = this.scene-3
                     }
                     this.cS5 = true
+                    this.lastSafe = 6
                 }
                 else if(this.scene==7){
                     this.numToReturn = this.scene-4
+                    this.bonusHP = 15
+                    this.lastSafe = 7
                 }
                 else if(this.scene==8){
                     if(direction=="east"&&directionE==majorityVote){
@@ -128,6 +142,8 @@ module.exports = class CommandParser{
                     else{
                         this.numToReturn = this.scene+3
                     }
+                    this.bonusMag = 7
+                    this.lastSafe = 8
                 }
                 else if(this.scene==9){
                     if(direction=="east"&&directionE==majorityVote){
@@ -139,6 +155,7 @@ module.exports = class CommandParser{
                     else{
                         this.numToReturn = this.scene+2
                     }
+                    this.lastSafe = 9
                 }
                 else if(this.scene==10){
                     if(direction=="east"&&directionE==majorityVote){
@@ -147,21 +164,23 @@ module.exports = class CommandParser{
                     else{
                         this.numToReturn = this.scene-4
                     }
+                    this.bonusDef = 10
+                    this.lastSafe = 10
                 }
                 console.log("numToReturn: ", this.numToReturn, this.cS2, this.cS3, this.cS4, this.cS5)
-                return [this.numToReturn, 0, 1, [],[], this.cS2, this.cS3, this.cS4, this.cS5]
+                return [this.numToReturn, 0, 1, [],[], this.cS2, this.cS3, this.cS4, this.cS5,this.bonusDef,this.bonusHP,this.bonusPhy,this.bonusMag, this.lastSafe]
             }
             return false;
     }
     updatePickup(object){
         if(object=="stones"||object=="rubble"||object == "rocks"){
-            return [this.scene, object, 2, true, "has explored", this.cS2, this.cS3, this.cS4, this.cS5]
+            return [this.scene, object, 2, true, "has explored", this.cS2, this.cS3, this.cS4, this.cS5,this.bonusDef,this.bonusHP,this.bonusPhy,this.bonusMag, this.lastSafe]
         }
         else if(object=="food"||object=="groceries"){
-            return [this.scene, object,2,this.check1, "", this.cS2, this.cS3, this.cS4, this.cS5]
+            return [this.scene, object,2,this.check1, "", this.cS2, this.cS3, this.cS4, this.cS5,this.bonusDef,this.bonusHP,this.bonusPhy,this.bonusMag, this.lastSafe]
         }
         else if(object=="rope"){
-            return [this.scene, object, 2, this.check1, "", this.cS2, this.cS3, this.cS4, this.cS5]
+            return [this.scene, object, 2, this.check1, "", this.cS2, this.cS3, this.cS4, this.cS5,this.bonusDef,this.bonusHP,this.bonusPhy,this.bonusMag, this.lastSafe]
         }
     }
     parse(){
@@ -170,7 +189,7 @@ module.exports = class CommandParser{
         const validCommands = {0:{"move":["north"]}, 1:{"move":["east", "west"], "pickup": ["food", "rubble", "stones", "groceries", "rope", "rocks"], "drop":["food"], "eat":["food"]}, 2:{"move":["east","west","north"],"attack": ["vampire"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 3:{"move":["west","east","south"],"attack": ["werewolf", "wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 4:{"move":["west"],"eat":["food"]}, 5:{"move":["south","west"],"attack": ["siren"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 6:{"move":["north","east"],"attack": ["alpha","werewolf","wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]},7:{"move":["north"],"eat":["food"]},8:{"move":["east","west","north"],"eat":["food"]},9:{"move":["east","west","north"],"eat":["food"]},10:{"move":["east","south"],"eat":["food"]},11:{"move":[],"attack": ["dragon"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}}
         
         let action = this.normalizeAction(this.command)
-        console.log("Action: ", action)
+        console.log("Action: ", action, this.scene)
         let validity = validCommands[this.scene][action[0]]
         console.log("validity,", validity)
         if(validity){
