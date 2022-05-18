@@ -669,14 +669,12 @@ async function parsingComm(req,res){
                 else if((sceneNum==2&&check2&&!changedScene2)||(sceneNum==3&&check3&&!changedScene3)||(sceneNum==5&&check4&&!changedScene4)||(sceneNum==6&&check5&&!changedScene5)){
                     description = gSresult.prompt
                 }
+                console.log(check1, "checkity check")
                 if(check1&&sceneNum==1){
                     console.log("default", defaultSetting)
                     description = defaultSetting["description"]["conditionals"]["has explored"]
                     if(actNum==2&&(!inventoryCheck)){
                         description = thisUser + ` picked up ${object}!<br><br>`+description
-                    }
-                    else if(playersThatVoted.length<Object.values(gSresult.players).length){
-                        description = gSresult.prompt
                     }
                 }
                 else if(check2&&sceneNum==2&&changedScene2){
