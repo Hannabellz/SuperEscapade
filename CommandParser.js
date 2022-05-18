@@ -2,13 +2,14 @@ const firstRound = require("./cartridges/map.json")
 const AttackParser = require("./AttackParser")
 //----Command Parser, getting the first part of the input command since that will contain the player's intended action----
 module.exports = class CommandParser{
-    constructor (lastSafe, bonusDef,bonusHP, bonusPhy,bonusMag,thisPlayer, playersThatVoted,command, scenes, check1,cS2, cS3, cS4,cS5,cS6, scene, voteToMove, directions, numOfPlayers, stats, moves, specialUsed, inventory, vamps, vampH, wolves, wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH){
+    constructor (lastSafe, bonusDef,bonusHP, bonusPhy,bonusMag,thisPlayer, playersThatVoted,command, scenes, check1,cS2, cS3, cS4,cS5,cS6, scene, voteToMove, directions, numOfPlayers, stats, moves, specialUsed, inventory, vamps, vampH, wolves, wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH, thisUser){
         this.lastSafe = lastSafe
         this.bonusDef = bonusDef
         this.bonusHP =bonusHP
         this.bonusPhy = bonusPhy
         this.bonusMag = bonusMag
         this.Player = thisPlayer
+        this.User = thisUser
         this.pTV = playersThatVoted
         this.command = command
         this.scenes = scenes
@@ -204,11 +205,13 @@ module.exports = class CommandParser{
         }
         else if((action[0] == "attack" && action[2] == "with")||(action[0]=="use" && action[2]=="on")&&action.length>=4){
             console.log("action: ", action)
-            let attack = new AttackParser(action, this.numOfPlayers,this.playerMoves,this.turnsSinceSpecial, this.playerStats, this.inventory, this.scene, this.vamps,this.vampH, this.wolves, this.wolfH, this.alpha,this.alphaH, this.sirens,this.sirenH, this.dragon, this.dragonH);
+            let attack = new AttackParser(action, this.numOfPlayers,this.playerMoves,this.turnsSinceSpecial, this.playerStats, this.inventory, this.scene, this.vamps,this.vampH, this.wolves, this.wolfH, this.alpha,this.alphaH, this.sirens,this.sirenH, this.dragon, this.dragonH, this.User);
             return attack.parse();//3 will be the code for attacking
         }   
-        else if(action[0]=="eat"&&validity.includes(action[1])){
-            return [-7,action[1],4] //7 is amount of health it restores, 4 will be code for eating
+        else if(action[0]=="eat"&&validity.includes(action[1])&&(this.inventory.includes("food")||this.inventory.includes("groceries"))){
+            if(this.inventory.includes("food"))
+                return [-7,"food",4] //7 is amount of health it restores, 4 will be code for eating
+            return [-7, "groceries", 4]
         }
         else{
             return false

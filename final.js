@@ -163,7 +163,7 @@ async function renderGameState(req,res){
             let description = defaultSetting["description"]["default"]
             let players = {}
             players[req.body.user]=req.body.email
-            gameStates.insertOne({gameID: gameIDy, prompt: description, index:0, players:players,faintedPlayers:{}, playersVoted: [],voteToMove: 0, directions: [], bonusHP: 0, bonusDef: 0, bonusMag: 0, bonusPhy:0, check1: false,changedScene1: false,check2:false,changedScene2: false,check3:false,changedScene3: false,check4:false,changedScene4: false, check5:false,changedScene5: false,check6:false,changedScene6: false, vampiresDefeated: 0, vampireHealth: 50, werewolvesDefeated: 0, werewolfHealth: 50, alphaDefeated:0, alphaHealth: 100,sirensDefeated:0, sirenHealth: 70, dragonDefeated:0, dragonHealth: 300, lastSafe: 1}) 
+            gameStates.insertOne({gameID: gameIDy, prompt: description, index:0, players:players,faintedPlayers:{},fainted: false, playersVoted: [],voteToMove: 0, directions: [], bonusHP: 0, bonusDef: 0, bonusMag: 0, bonusPhy:0, check1: false,changedScene1: false,check2:false,changedScene2: false,check3:false,changedScene3: false,check4:false,changedScene4: false, check5:false,changedScene5: false,check6:false,changedScene6: false, vampiresDefeated: 0, vampireHealth: 50, werewolvesDefeated: 0, werewolfHealth: 50, alphaDefeated:0, alphaHealth: 100,sirensDefeated:0, sirenHealth: 70, dragonDefeated:0, dragonHealth: 300, lastSafe: 1}) 
             res.render("escapade", {gameID: gameIDy, prompt:description, thisUser: req.body.user, thisEmail: req.body.email})
         }
         if(result){
@@ -187,7 +187,7 @@ async function getGame(req,res){
     }
     )
 }
-function monster(sceneNum, thisUser, playerDef, creaturesData){
+function monster(sceneNum, thisUser, playerDef,playerPhy,playerMag, creaturesData){
     //will return if the next monster in the lineup
     //is now the current, description/what their attacking line is, and the damage they will be dealing
     if(sceneNum==2){
@@ -198,7 +198,7 @@ function monster(sceneNum, thisUser, playerDef, creaturesData){
         let random = Math.floor(Math.random()*attackList.length)
         let chosenAttack = attackList[random]
         let name = Object.keys(chosenAttack)[0]
-        let totalDamage = (50/playerDef) * Object.values(chosenAttack)[0]
+        let totalDamage = ((playerPhy+2) + Object.values(chosenAttack)[0])/playerDef
         if(numDef<5&&currentCreatureHealth>0){
             return [false, `The vampire used ${name}, lashing its vicious fangs at ${thisUser}.`, totalDamage]
         }
@@ -230,7 +230,7 @@ function monster(sceneNum, thisUser, playerDef, creaturesData){
         let random = Math.floor(Math.random()*attackList.length)
         let chosenAttack = attackList[random]
         let name = Object.keys(chosenAttack)[0]
-        let totalDamage = (30/playerDef) * Object.values(chosenAttack)[0]
+        let totalDamage = ((playerPhy-2) + Object.values(chosenAttack)[0])/playerDef
         if(numDef<5&&currentCreatureHealth>0){
             return [false, `The werewolf used ${name}, keeping close to ${thisUser}.`, totalDamage]
         }
@@ -262,7 +262,7 @@ function monster(sceneNum, thisUser, playerDef, creaturesData){
         let random = Math.floor(Math.random()*attackList.length)
         let chosenAttack = attackList[random]
         let name = Object.keys(chosenAttack)[0]
-        let totalDamage = (60/playerDef) * Object.values(chosenAttack)[0]
+        let totalDamage = ((playerMag+4) + Object.values(chosenAttack)[0])/playerDef
         if(numDef<7&&currentCreatureHealth>0){
             return [false, `The siren used ${name}, moving with deadly grace towards ${thisUser}.`, totalDamage]
         }
@@ -302,7 +302,7 @@ function monster(sceneNum, thisUser, playerDef, creaturesData){
         let random = Math.floor(Math.random()*attackList.length)
         let chosenAttack = attackList[random]
         let name = Object.keys(chosenAttack)[0]
-        let totalDamage = (55/playerDef) * Object.values(chosenAttack)[0]
+        let totalDamage = ((playerPhy+10) + Object.values(chosenAttack)[0])/playerDef
         if(numDef==0&&currentCreatureHealth>0){
             return [false, `The alpha used ${name}, relentlessly attacking ${thisUser}.`, totalDamage]
         }
@@ -318,7 +318,7 @@ function monster(sceneNum, thisUser, playerDef, creaturesData){
         let random = Math.floor(Math.random()*attackList.length)
         let chosenAttack = attackList[random]
         let name = Object.keys(chosenAttack)[0]
-        let totalDamage = (100/playerDef) * Object.values(chosenAttack)[0]
+        let totalDamage = ((playerMag+20) + Object.values(chosenAttack)[0])/playerDef
         if(numDef==0&&currentCreatureHealth>0){
             return [false, `The dragon used ${name}, aiming straight at ${thisUser}.`, totalDamage]
         }
@@ -348,11 +348,13 @@ async function parsingComm(req,res){
         inventory = result.inventory
         gameStates.findOne({gameID: gameIDy}, async function(err, gSresult){
             console.log("length", Object.keys(gSresult.players).length)
-            let parsing = new CommandParser(gSresult.lastSafe,gSresult.bonusDef,gSresult.bonusHP,gSresult.bonusPhy,gSresult.bonusMag,thisEmail, gSresult.playersVoted, parsed, scenes, gSresult.check1,gSresult.changedScene2,gSresult.changedScene3,gSresult.changedScene4,gSresult.changedScene5,gSresult.changedScene6, gSresult.index, gSresult.voteToMove, gSresult.directions,Object.keys(gSresult.players).length, stats, moves,result.specialUsed, inventory, gSresult.vampiresDefeated, gSresult.vampireHealth, gSresult.werewolvesDefeated, gSresult.werewolfHealth, gSresult.alphaDefeated, gSresult.alphaHealth, gSresult.sirensDefeated, gSresult.sirenHealth,gSresult.dragonDefeated,gSresult.dragonHealth)
+            let parsing = new CommandParser(gSresult.lastSafe,gSresult.bonusDef,gSresult.bonusHP,gSresult.bonusPhy,gSresult.bonusMag,thisEmail, gSresult.playersVoted, parsed, scenes, gSresult.check1,gSresult.changedScene2,gSresult.changedScene3,gSresult.changedScene4,gSresult.changedScene5,gSresult.changedScene6, gSresult.index, gSresult.voteToMove, gSresult.directions,Object.keys(gSresult.players).length, stats, moves,result.specialUsed, inventory, gSresult.vampiresDefeated, gSresult.vampireHealth, gSresult.werewolvesDefeated, gSresult.werewolfHealth, gSresult.alphaDefeated, gSresult.alphaHealth, gSresult.sirensDefeated, gSresult.sirenHealth,gSresult.dragonDefeated,gSresult.dragonHealth, thisUser)
             let commandObj = parsing.parse()
             console.log("gsssss:", gSresult.changedScene2)
             console.log("commandObj: ", commandObj)
             if(commandObj){
+                let fainted = gSresult.fainted
+                console.log("fainted, ", fainted)
                 let boostedDef = gSresult.bonusDef
                 let boostedHP = gSresult.bonusHP
                 let boostedPhy = gSresult.bonusPhy
@@ -389,8 +391,26 @@ async function parsingComm(req,res){
                 let dragonDef = gSresult.dragonDefeated
                 let thisDragonHealth = gSresult.dragonHealth
                 let playersThatVoted = gSresult.playersVoted
+                let faintedPlayers = gSresult.faintedPlayers
                 let special = result.specialUsed
                 let monsterAttack = ""
+                if(!Object.values(faintedPlayers).includes(thisEmail)){
+                    if(result.damageTaken>=stats["HP"]+gSresult.bonusHP){
+                        faintedPlayers[thisUser] = [thisEmail]
+                    }
+                }
+                if(Object.keys(faintedPlayers).length==Object.keys(gSresult.players).length){
+                    console.log("fainted==players")
+                    let defaultSetting = firstRound.rooms[scenes[gSresult.lastSafe]]
+                    let description = defaultSetting["description"]["conditionals"]["has fainted"]
+                    for(let email of Object.values(gSresult.players)){
+                        let userQuery = {$set: {damageTaken: 0}}
+                        await users.findOneAndUpdate({email: email},userQuery)
+                    }
+                    await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: description,faintedPlayers: {},fainted: true, index: gSresult.lastSafe, changedScene1:(!(gSresult.lastSafe==1)&&changedScene1), changedScene2: (!(gSresult.lastSafe==2)&&changedScene2), changedScene3:(!(gSresult.lastSafe==3)&&changedScene3), changedScene4: (!(gSresult.lastSafe==5)&&changedScene4), changedScene5: (!(gSresult.lastSafe==6)&&changedScene5), changedScene6: (!(gSresult.lastSafe==11)&&changedScene6)}});
+                    
+                    return;
+                }
                 if(actNum==1){
                     sceneNum = commandObj[0]
                     voteToNum = commandObj[1]
@@ -406,38 +426,38 @@ async function parsingComm(req,res){
                     boostedMag = commandObj[12]
                     lastSafe = commandObj[13]
                 }
-                if(actNum==2){
+                else if(actNum==2){
                     sceneNum =commandObj[0]
                     object = commandObj[1]
                     check1 = commandObj[3] //right now is only for the first pickup conditional, may have to alter slightly later
                     conditional = commandObj[4]
-                    if(!inventory.includes(object)){
+                    if(((object == "rocks"||object=="stones"||object=="rubble") &&!(inventory.includes("rocks")||inventory.includes("stones")||inventory.includes("rubble")))){
                         inventory.push(object)
                         inventoryCheck = false
                     }
+                    else if(((object == "food"||object=="groceries") &&!(inventory.includes("food")||inventory.includes("groceries")))){
+                        inventory.push(object)
+                        inventoryCheck = false
+                    }
+                    else if (object=="rope"&&!inventory.includes(object)){
+                        inventory.push(object)
+                        inventoryCheck = false
+                    }
+                    //all three if statements are doing the same thing but it's better visually to break them up, since different words can have the same central word intention. 
                     changedScene2 = commandObj[5]
                     changedScene3 = commandObj[6]
                     changedScene4 = commandObj[7]
                     changedScene5 = commandObj[8]
                     await users.updateOne({email: thisEmail}, {$set:{inventory:inventory}})
                 }
-                if(actNum==3){
-                    
-                    let faintedPlayers = gSresult.faintedPlayers
+                else if(actNum==3){
                     let playerDef = stats["Defense"]
+                    let playerPhy = stats["Physical Attack"]
+                    let playerMag = stats["Magical Attack"]
                     //users are attacking/using items on enemies
                     //will either send [item attacked with, the damage, 3, booleans for special moves, and message if they do not have ITEM being attacked with]
                     //or [item they used, the damage, 3, boolean for being tied, or message if they did not have the ITEM being used]
-                    if(Object.keys(faintedPlayers).length==Object.keys(gSresult.players).length){
-                        let defaultSetting = firstRound.rooms[scenes[gSresult.lastSafe]]
-                        let description = defaultSetting["description"]["conditionals"]["has fainted"]
-                        for(let email of Object.values(gSresult.players)){
-                            let userQuery = {$set: {damageTaken: 0}}
-                            users.findOneAndUpdate({email: email},userQuery)
-                        }
-                        await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: description,faintedPlayers: {}, index: gSresult.lastSafe, changedScene1:(!gSresult.lastSafe==1&&changedScene1), changedScene2: (!gSresult.lastSafe==2&&changedScene2), changedScene3:(!gSresult.lastSafe==3&&changedScene3), changedScene4: (!gSresult.lastSafe==4&&changedScene4), changedScene5: (!gSresult.lastSafe==5&&changedScene5), changedScene6: (!gSresult.lastSafe==6&&changedScene6)}});
-                        return;
-                    }
+                    
                     if(!Object.values(faintedPlayers).includes(thisEmail)){
 
                     if(commandObj.length==5){
@@ -447,7 +467,7 @@ async function parsingComm(req,res){
                             let item = commandObj[0]
                             let damageDealt = commandObj[1]
                             let tied = commandObj[3]
-                            inventory.pop(item)
+                            inventory = inventory.filter(i=> i!==item)
                             if(sceneNum==2){
                                 thisVampHealth -= damageDealt
                             }
@@ -466,7 +486,7 @@ async function parsingComm(req,res){
                             if(!tied){
                                 let random = Math.floor(Math.random() * Object.keys(gSresult.players).length)
                                 let userToAttack = Object.keys(gSresult.players)[random]
-                                let callTo = monster(sceneNum, userToAttack, playerDef, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
+                                let callTo = monster(sceneNum, userToAttack, playerDef,playerPhy,playerMag, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
                                 let oneDef = callTo[0]
                                 monsterAttack = callTo[1]
                                 let damageTaken = callTo[2]
@@ -475,7 +495,7 @@ async function parsingComm(req,res){
                                     await users.updateOne({email: gSresult.players[userToAttack]}, {$inc:{damageTaken:damageTaken}})
                                 else{
                                     for(let email of Object.values(gSresult.players)){
-                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        let userQuery = {$inc: {damageTaken: Math.max(-10,0-result.damageTaken)}}
                                         users.findOneAndUpdate({email: email},userQuery)
                                     }
                                 }
@@ -506,9 +526,17 @@ async function parsingComm(req,res){
                                 }
                                 //user query for userToAttack, user query for inventory use
                             }
+                            else{
+                                await users.updateOne({email: thisEmail}, {$set:{inventory:inventory}})
+                            }
                         }
                         else{
-                            await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: commandObj[4]}});
+                            if(!Object.values(faintedPlayers).includes(thisEmail)){
+                                if(result.damageTaken>=stats["HP"]+gSresult.bonusHP){
+                                    faintedPlayers[thisUser] = [thisEmail]
+                                }
+                            }
+                            await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: commandObj[4], faintedPlayers: faintedPlayers}});
                             return;
                         }
                     }
@@ -523,7 +551,7 @@ async function parsingComm(req,res){
                             let freezeUsed = commandObj[6]
                             let phoenixPulseUsed = commandObj[7]
                             if (attackedWith=="stones"||attackedWith=="rocks"||attackedWith=="rubble"){
-                                inventory.pop(attackedWith)
+                                inventory = inventory.filter(i=> i!==attackedWith)
                             }
                             if(sceneNum==2){
                                 thisVampHealth -= damageDealt
@@ -551,7 +579,7 @@ async function parsingComm(req,res){
                                     let bodef = boostedDef
                                     totalTurnDef = totalTurnDef*1.2 + bodef
                                 })
-                                let callTo = monster(sceneNum, thisUser, totalTurnDef, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
+                                let callTo = monster(sceneNum, thisUser, totalTurnDef,playerPhy, playerMag, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
                                 let oneDef = callTo[0]
                                 monsterAttack = callTo[1]
                                 let damageTaken = callTo[2]
@@ -560,7 +588,7 @@ async function parsingComm(req,res){
                                     await users.updateOne({email: thisEmail}, {$inc:{damageTaken:damageTaken}})
                                 else{
                                     for(let email of Object.values(gSresult.players)){
-                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        let userQuery = {$inc: {damageTaken: Math.max(-10,0-result.damageTaken)}}
                                         users.findOneAndUpdate({email: email},userQuery)
                                     }
                                 }
@@ -594,19 +622,20 @@ async function parsingComm(req,res){
                                 let random = Math.floor(Math.random() * Object.keys(gSresult.players).length)
                                 let userToAttack = Object.keys(gSresult.players)[random]
                                 console.log(userToAttack, random,gSresult.players)
-                                let callTo = monster(sceneNum, userToAttack, playerDef, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
+                                let callTo = monster(sceneNum, userToAttack, playerDef,playerPhy,playerMag, {"vampires": [vampiresDef, thisVampHealth], "werewolves": [werewolvesDef, thisWolfHealth], "alpha": [alphaDef, thisAlphaHealth], "sirens": [sirensDef, thisSirenHealth], "dragon": [dragonDef, thisDragonHealth]})
                                 let oneDef = callTo[0]
                                 monsterAttack = callTo[1]
                                 let damageTaken = callTo[2]
                                 if(healingHandsUsed){
                                     damageTaken-= (damageTaken*.2)
                                 }
+                                console.log("attack With", attackedWith, inventory)
                                 await users.updateOne({email: thisEmail}, {$set:{inventory:inventory}})
                                 if(damageTaken>0)
                                     await users.updateOne({email: gSresult.players[userToAttack]}, {$inc:{damageTaken:damageTaken}})
                                 else{
                                     for(let email of Object.values(gSresult.players)){
-                                        let userQuery = {$inc: {damageTaken: -10}}
+                                        let userQuery = {$inc: {damageTaken: Math.max(-10,0-result.damageTaken)}}
                                         users.findOneAndUpdate({email: email},userQuery)
                                     }
                                 }
@@ -638,7 +667,12 @@ async function parsingComm(req,res){
                             }
                         }
                         else{
-                            await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: commandObj[8]}});
+                            if(!Object.values(faintedPlayers).includes(thisEmail)){
+                                if(result.damageTaken>=stats["HP"]+gSresult.bonusHP){
+                                    faintedPlayers[thisUser] = [thisEmail]
+                                }
+                            }
+                            await gameStates.updateOne({gameID: gameIDy},{$set:{prompt: commandObj[8], faintedPlayers: faintedPlayers}});
                             return;
                         }
                         special+=1;
@@ -660,10 +694,12 @@ async function parsingComm(req,res){
                     await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt: `${thisUser} has been knocked out for this battle.`}})
                 }
                 }
-                if(attackNum==4){
+                else if(actNum==4){
                     let healthBack = commandObj[0]
+                    healthBack = Math.max(healthBack,0-result.damageTaken)
+                    console.log(healthBack, "hb")
                     let eaten = commandObj[1]
-                    inventory.pop(eaten)
+                    inventory = inventory.filter(i=> i!==eaten)
                     await users.updateOne({email: thisEmail},{$inc:{damageTaken: healthBack}, $set: {inventory:inventory}})
                 }
                 console.log("sceneNum, voteToNum", sceneNum, voteToNum)
@@ -671,6 +707,24 @@ async function parsingComm(req,res){
                 let description = defaultSetting["description"]["default"]
                 if(actNum==2&&(!inventoryCheck)){
                     description = thisUser + ` picked up ${object}!<br><br>`+description
+                }
+                else if(fainted&&((sceneNum==2&&vampiresDef<5)||(sceneNum==3&&werewolvesDef<5)||(sceneNum==5&&sirensDef<7)||(sceneNum==6&&alphaDef<1)||(sceneNum==11&&dragonDef<1))){
+                    if(sceneNum==2){
+                        description = "Upon returning, you found things just as you had (undesirably) left them. And the vampire responsible for clearing your wave looked surprised and disappointed to see you back."
+                    }
+                    else if(sceneNum==3){
+                        description = "As soon as you stepped foot into the werewolf den again, you noticed the stance change. They resembled a cat more, back arching and a hissing sound escaping past their gnarly teeth."
+                    }
+                    else if(sceneNum==5){
+                        description = "There was no less fog than there had been previously, despite your better wishes. At least your head was a bit clearer- for the time being. Granted, it probably would've been better if you hadn't thought such a thing, considering the siren still lurking around. They seemed disturbed and displeased by your appearance.<br><br>Good."
+                    }
+                    else if(sceneNum==6){
+                        description = "Despite your high hopes of being used to it, the moment you were here again, you felt the same sickening sensations as before. The mighty alpha leapt from its perch, its growl reverberating throughout the area once more. At least now it didn't look so proud and comfortable."
+                    }
+                    else if(sceneNum==11){
+                        description = "Luckily, the dragon had yet to fly away. In fact, it looked as if it had been expecting your return, looking upon you as soon as you entered its range of vision. Warning smoke blew from its nostrils, as if it was certain the action would scare you away."
+                    }
+                    fainted = false
                 }
                 else if((sceneNum==2&&check2&&!changedScene2)||(sceneNum==3&&check3&&!changedScene3)||(sceneNum==5&&check4&&!changedScene4)||(sceneNum==6&&check5&&!changedScene5)){
                     description = gSresult.prompt
@@ -713,14 +767,20 @@ async function parsingComm(req,res){
                 else if(sceneNum==8&&boostedMag>0){
                     description = defaultSetting["description"]["conditionals"]["has explored"]
                 }
-                else if(sceneNum==4&&boosted10>0){
+                else if(sceneNum==10&&boostedDef>0){
                     description = defaultSetting["description"]["conditionals"]["has explored"]
                 }
                 console.log("description: ", description)
                 console.log("cssss: ", changedScene2)
                 if(actNum!=3){
-                    await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt:description, voteToMove: voteToNum,playersVoted: playersThatVoted, index: sceneNum, directions: direction, check1: check1,changedScene2:changedScene2,changedScene3:changedScene3,changedScene4:changedScene4,changedScene5:changedScene5,changedScene6:changedScene6,bonusDef: boostedDef, bonusHP: boostedHP, bonusPhy: boostedPhy, bonusMag: boostedMag}})
+                    await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt:description, voteToMove: voteToNum,playersVoted: playersThatVoted,fainted: fainted, index: sceneNum, directions: direction, check1: check1,changedScene2:changedScene2,changedScene3:changedScene3,changedScene4:changedScene4,changedScene5:changedScene5,changedScene6:changedScene6,bonusDef: boostedDef, bonusHP: boostedHP, bonusPhy: boostedPhy, bonusMag: boostedMag}})
                     if(actNum==1){
+                        if(Object.values(faintedPlayers).length>0){
+                            for(let email of Object.values(faintedPlayers)){
+                                let userQuery = {$set: {damageTaken: 0}}
+                                await users.findOneAndUpdate({email: email},userQuery)
+                            }
+                        }
                         await gameStates.updateOne({gameID: gameIDy}, {$set:{faintedPlayers:{}, lastSafe:lastSafe}})
                     }
                 }
@@ -763,9 +823,9 @@ async function parsingView(req, res){
                 console.log("moves", moves)
                 res.send(`<p>Attack 1: ${moves["Attack 1"]}</p><p>Attack 2: ${moves["Attack 2"]}</p><p>Attack 3: ${moves["Attack 3"]}</p>`)
             }
-            else{
+            else if (parsing == "stats"){
                 console.log("stats", stats, resultG)
-                res.send(`<p>Physical Attack: ${stats["Physical Attack"]+resultG.bonusPhy}</p><p>Magical Attack: ${stats["Magical Attack"]+resultG.bonusMag}</p><p>Defense: ${stats["Defense"]+resultG.bonusDef}</p><p>HP: ${stats["HP"]+resultG.bonusHP-result.damageTaken}</p>`) 
+                res.send(`<p>Physical Attack: ${stats["Physical Attack"]+resultG.bonusPhy}</p><p>Magical Attack: ${stats["Magical Attack"]+resultG.bonusMag}</p><p>Defense: ${stats["Defense"]+resultG.bonusDef}</p><p>HP: ${Math.max(stats["HP"]+resultG.bonusHP-result.damageTaken, 0)}</p>`) 
             }
         })
     
@@ -784,96 +844,5 @@ router.post('/newGame/*', urlencodedParser, renderGameState)
 router.get('/game/*', getGame)
 router.get('/parser/*', parsingComm)
 router.get('/viewInfo/*', parsingView)
-/*
-//Game Routes
-router.post('/defenders', urlencodedParser, makeGame); //create a new game ID, client app should be valid
-router.post('/:id', urlencodedParser, joinGame); //join a game using username, create new game state object relating user and gameID
-router.get('/:id/state/:playername', currGameState); //game state of a player for a specific game, including details of current scene
-router.post('/:id/:playername/commands', urlencodedParser, interactGame); //interaction with a particular scene
-function makeGame(req, res, next){
-    let gameInfo = req.body
-    const GameInstance = new (models.get('game'))(gameInfo)
-    GameInstance.save((err, model)=>{
-        console.log(err)
-        if(err) return next(err)
-        res.json(model)
-    })
-};
-function joinGame(req, res, next){
-    let playerInfo = req.body
-    let joinModel = playerInfo
-    joinModel.game = req.params.id
 
-    const GameStateInstance = new(models.get('gameState'))(joinModel)
-
-    GameStateInstance.save((err, model)=>{
-        if(err){ 
-            if(err.code ==11000) return next({ //error for duplicate users
-                error: true,
-                code: err.code,
-                message: 'That user is already inside the game.'
-            })
-            return next(err)
-        }
-        res.json(model)
-    })
-};
-function currGameState(req, res, next){
-    let gameid = req.params.id
-    let playername = req.params.playername
-
-    models.get('gameState')
-        .findOne({
-            game: gameid,
-            playername: playername
-        })
-        .populate('game')
-        .exec((err, model)=>{
-            if(err) return next(err)
-            if(!model) return next({
-                status: 404,
-                message: `Game state for player ${playername} and Game ID: ${gameid} not found`
-            })
-            res.json(model)
-        })
-}
-function interactGame(req, res, next){
-    let command = req.body
-    command.context = {
-        gameId: req.params.id,
-        playername: req.params.playername
-    }
-
-    let parser = new CommandParser(command)
-    let commandObj = parser.parse()
-    if(!commandObj) return next({
-        status: 400,
-        errorCode: config.get("errorCodes.invalidCommand"),
-        message: "Unknown command"
-    })
-    commandObj.run((err, result)=>{
-        if (err) return next(err)
-        res.json(result)
-    })
-}
-
-function interactWithScene(req,res,next){
-    let command = req.body
-    command.context = {
-        gameId: req.params.id,
-        playername: req.params.playername,
-    }
-    let parser = new CommandParser(command)
-    let commandObj = parser.parse() //will either be false or a valid command object
-    if(!commandObj) return next({ //user command error
-        status: 400, 
-        errorCode: config.get("errorCodes.invalidCommand"),
-        message: "Unknown command"
-    })
-    commandObj.run((err, result)=>{ //for valid user command
-        if(err) return next(err)
-        res.json(result)
-    })
-}
-router.post('/:id/:playername/:scene',urlencodedParser, interactWithScene)*/
 module.exports = router;

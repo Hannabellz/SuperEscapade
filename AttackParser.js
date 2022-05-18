@@ -1,5 +1,5 @@
 module.exports = class AttackParser{
-    constructor (action, numOfPlayers, playerMoves, turnsSinceSpecial, playerStats, playerInventory, scene, vamps,vampH, wolves,wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH){
+    constructor (action, numOfPlayers, playerMoves, turnsSinceSpecial, playerStats, playerInventory, scene, vamps,vampH, wolves,wolfH, alpha,alphaH, sirens,sirenH, dragon,dragonH, user){
         this.action = action
         this.numOfPlayers = numOfPlayers
         this.playerMoves = playerMoves
@@ -7,6 +7,7 @@ module.exports = class AttackParser{
         this.playerStats = playerStats
         this.playerInventory = playerInventory
         this.scene = scene
+        this.user = user
         this.vampsDef = vamps
         this.vampHealth = vampH
         this.wolvesDef = wolves
@@ -36,7 +37,15 @@ module.exports = class AttackParser{
                 attackDamage = 7
             }
             else{
-                message = "You did not pick up "+attackWith
+                message = this.user+" did not pick up "+attackWith+"."
+            }
+        }
+        else if(attackWith=="food"||attackWith=="groceries"){
+            if(this.playerInventory.includes(attackWith)){
+                attackDamage = 10
+            }
+            else{
+                message = this.user+" did not pick up "+attackWith+"."
             }
         }
         else if(attackWith=="attack 1"||attackWith=="1"){
@@ -90,7 +99,7 @@ module.exports = class AttackParser{
                 attackWith = thisPlayerAttack
             }
             else{
-                message = "You need more charge for this move."
+                message = this.user+" needs more charge for their move."
             }
         }
         return [attackWith,attackDamage,3, healing, onEdge, rattle, freeze, phoenixpulse, message]
@@ -100,12 +109,12 @@ module.exports = class AttackParser{
         let attackDamage = 0
         let tied = false
         let message = ""
-        if(itemUsed == "stones"||itemUsed=="rocks"||itemUsed=="rubble"||itemUsed =="food"||itemUsed=="groceries"){
+        if(itemUsed == "stones"||itemUsed=="rocks"||itemUsed=="rubble"){
             if(this.playerInventory.includes(itemUsed)){
                 attackDamage = 7
             }
             else{
-                message = "You did not pick up "+itemUsed
+                message = this.user+" did not pick up "+itemUsed+"."
             }
         }
         else if(itemUsed == "rope"){
@@ -113,7 +122,7 @@ module.exports = class AttackParser{
                 tied = true
             }
             else{
-                message = "You did not pick up "+itemUsed
+                message = this.user+" did not pick up "+itemUsed+"."
             }
         }
         else{
@@ -121,7 +130,7 @@ module.exports = class AttackParser{
                 attackDamage = 10
             }
             else{
-                message = "You did not pick up "+itemUsed
+                message = this.user+" did not pick up "+itemUsed+"."
             }
         }
         return [itemUsed,attackDamage,3, tied, message]
