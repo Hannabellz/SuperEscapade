@@ -100,7 +100,7 @@ module.exports = class AttackParser{
         let attackDamage = 0
         let tied = false
         let message = ""
-        if(itemUsed == "stones"||itemUsed=="rocks"||itemUsed=="rubble"){
+        if(itemUsed == "stones"||itemUsed=="rocks"||itemUsed=="rubble"||itemUsed =="food"||itemUsed=="groceries"){
             if(this.playerInventory.includes(itemUsed)){
                 attackDamage = 7
             }

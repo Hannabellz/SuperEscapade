@@ -660,6 +660,12 @@ async function parsingComm(req,res){
                     await gameStates.updateOne({gameID: gameIDy}, {$set:{prompt: `${thisUser} has been knocked out for this battle.`}})
                 }
                 }
+                if(attackNum==4){
+                    let healthBack = commandObj[0]
+                    let eaten = commandObj[1]
+                    inventory.pop(eaten)
+                    await users.updateOne({email: thisEmail},{$inc:{damageTaken: healthBack}, $set: {inventory:inventory}})
+                }
                 console.log("sceneNum, voteToNum", sceneNum, voteToNum)
                 let defaultSetting = firstRound.rooms[scenes[sceneNum]]
                 let description = defaultSetting["description"]["default"]

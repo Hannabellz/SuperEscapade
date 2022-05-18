@@ -186,7 +186,7 @@ module.exports = class CommandParser{
     parse(){
         //let setting = firstRound.rooms[this.scenes[this.scene]]
         //let defaultDescription = setting["description"]["default"]
-        const validCommands = {0:{"move":["north"]}, 1:{"move":["east", "west"], "pickup": ["food", "rubble", "stones", "groceries", "rope", "rocks"], "drop":["food"], "eat":["food"]}, 2:{"move":["east","west","north"],"attack": ["vampire"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 3:{"move":["west","east","south"],"attack": ["werewolf", "wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 4:{"move":["west"],"eat":["food"]}, 5:{"move":["south","west"],"attack": ["siren"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}, 6:{"move":["north","east"],"attack": ["alpha","werewolf","wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]},7:{"move":["north"],"eat":["food"]},8:{"move":["east","west","north"],"eat":["food"]},9:{"move":["east","west","north"],"eat":["food"]},10:{"move":["east","south"],"eat":["food"]},11:{"move":[],"attack": ["dragon"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"]}}
+        const validCommands = {0:{"move":["north"]}, 1:{"move":["east", "west"], "pickup": ["food", "rubble", "stones", "groceries", "rope", "rocks"], "drop":["food"], "eat":["food", "groceries"]}, 2:{"move":["east","west","north"],"attack": ["vampire"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"], "eat":["food","groceries"]}, 3:{"move":["west","east","south"],"attack": ["werewolf", "wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"], "eat":["food", "groceries"]}, 4:{"move":["west"],"eat":["food", "groceries"], "eat":["food", "groceries"]}, 5:{"move":["south","west"],"attack": ["siren"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"], "eat":["food", "groceries"]}, 6:{"move":["north","east"],"attack": ["alpha","werewolf","wolf"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"], "eat":["food", "groceries"]},7:{"move":["north"],"eat":["food", "groceries"]},8:{"move":["east","west","north"],"eat":["food", "groceries"]},9:{"move":["east","west","north"],"eat":["food", "groceries"]},10:{"move":["east","south"],"eat":["food", "groceries"]},11:{"move":[],"attack": ["dragon"], "use": ["rope", "food", "groceries","stones", "rocks", "rubble"], "eat":["food", "groceries"]}}
         
         let action = this.normalizeAction(this.command)
         console.log("Action: ", action, this.scene)
@@ -207,6 +207,9 @@ module.exports = class CommandParser{
             let attack = new AttackParser(action, this.numOfPlayers,this.playerMoves,this.turnsSinceSpecial, this.playerStats, this.inventory, this.scene, this.vamps,this.vampH, this.wolves, this.wolfH, this.alpha,this.alphaH, this.sirens,this.sirenH, this.dragon, this.dragonH);
             return attack.parse();//3 will be the code for attacking
         }   
+        else if(action[0]=="eat"&&validity.includes(action[1])){
+            return [-7,action[1],4] //7 is amount of health it restores, 4 will be code for eating
+        }
         else{
             return false
         }
