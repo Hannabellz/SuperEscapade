@@ -94,6 +94,7 @@ async function createOrJoin(req,res){
             res.send(`<form action = "/joinGame" method = "POST">
             <input type = "hidden" name = "user" value = "${safeInit}">
             <input type = "hidden" name = "email" value = "${req.body.email}">
+            <input type = "hidden" name = "class" value = "${req.body.class}">
             Input the ID of the game you'd like to join: <input type = "text" name = "gameID">
             <input type = "submit" value = "Request Join!">
             </form>`)
@@ -134,11 +135,13 @@ async function joinRequest(req,res){
             <input type = "hidden" name = "user" value = "${req.body.user}">
             <input type = "hidden" name = "email" value = "${req.body.email}">
             <input type = "hidden" name = "option" value = 4>
+            <input type = "hidden" name = "class" value = "${req.body.class}">
             <input type = "submit" value = "Double-check that you have the right one">
             </form>
             <form action = "createOrJoin" method = "POST">
             <input type = "hidden" name = "user" value = "${req.body.user}">
             <input type = "hidden" name = "email" value = "${req.body.email}">
+            <input type = "hidden" name = "class" value = "${req.body.class}">
             <input type = "hidden" name = "option" value = 5>
              <input type = "submit" value = "or create your own.">
              </form>`)
