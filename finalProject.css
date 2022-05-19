@@ -1,0 +1,15 @@
+h1{
+    margin-left: 15%;
+}
+.introPara{
+    width: 95%;
+    columns: 2;
+}
+.roomListings{
+    font-size: large;
+    font-family: cursive;
+    margin-top: 30%;
+}
+.unit{
+    display: flex;
+}
